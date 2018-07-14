@@ -1983,7 +1983,9 @@ function renderWaveForm (index, source, output) {
             xmax = Math.max(xmax, (glengths[i] + ret.width[i]));
         }
         for (i = 0; i < content.length; i += 1 ) {
-                cmax = Math.max( cmax, content[i][1].length/2 );
+                if( content[i][1] ) {
+                    cmax = Math.max( cmax, content[i][1].length/2 );
+                }
         }
         content  = parseWaveLanes(ret.lanes, lane, cmax );
         glengths = renderWaveLane(root, content, index, lane);
