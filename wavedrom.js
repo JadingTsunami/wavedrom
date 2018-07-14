@@ -1969,7 +1969,7 @@ var rec = require('./rec'),
 function renderWaveForm (index, source, output) {
     var ret,
         root, groups, svgcontent, content, width, height,
-        glengths, xmax = 0, i;
+        glengths, xmax = 0, i, cmax = 0, j;
 
     if (source.signal) {
         insertSVGTemplate(index, document.getElementById(output + index), source, lane);
@@ -1982,7 +1982,10 @@ function renderWaveForm (index, source, output) {
         for (i in glengths) {
             xmax = Math.max(xmax, (glengths[i] + ret.width[i]));
         }
-        content  = parseWaveLanes(ret.lanes, lane, (xmax+1)/3 );
+        for (i = 0; i < content.length; i += 1 ) {
+                cmax = Math.max( cmax, content[i][1].length/2 );
+        }
+        content  = parseWaveLanes(ret.lanes, lane, cmax );
         glengths = renderWaveLane(root, content, index, lane);
         renderMarks(root, content, index, lane);
         renderArcs(root, ret.lanes, index, source, lane);
