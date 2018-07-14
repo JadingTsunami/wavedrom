@@ -1034,37 +1034,60 @@ var genFirstWaveBrick = require('./gen-first-wave-brick'),
 // text is the wave member of the signal object
 // extra = hscale-1 ( padding )
 // lane is an object containing all properties for this waveform
-function parseWaveLane (text, extra, lane) {
+function parseWaveLane (text, extra, lane, maximum) {
     var Repeats, Top, Next, Stack = [], R = [], i, subCycle;
     var unseen_bricks = [], num_unseen_markers;
+    var sofar = 0;
 
     Stack = text.split('');
     Next  = Stack.shift();
     subCycle = false;
 
     Repeats = 1;
+    sofar += 1;
     while (Stack[0] === '.' || Stack[0] === '|') { // repeaters parser
         Stack.shift();
+        sofar += 1;
         Repeats += 1;
     }
+    
+    if( Stack[0] === '-' ) {
+        Stack.shift();
+        for(i = 0; i < (maximum-sofar); i++) {
+            Repeats += 1;
+        }
+    }
+
     R = R.concat(genFirstWaveBrick(Next, extra, Repeats));
 
     while (Stack.length) {
         Top = Next;
         Next = Stack.shift();
+        sofar += 1;
         if (Next === '<') { // sub-cycles on
             subCycle = true;
             Next = Stack.shift();
+            sofar += 1;
         }
         if (Next === '>') { // sub-cycles off
             subCycle = false;
             Next = Stack.shift();
+            sofar += 1;
         }
         Repeats = 1;
         while (Stack[0] === '.' || Stack[0] === '|') { // repeaters parser
             Stack.shift();
+            sofar += 1;
             Repeats += 1;
         }
+
+        if( Stack[0] === '-' ) {
+            Stack.shift();
+            for(i = 0; i < (maximum-sofar); i++) {
+                Repeats += 1;
+            }
+        }
+
         if (subCycle) {
             R = R.concat(genWaveBrick((Top + Next), 0, Repeats - lane.period));
         } else {
@@ -1111,7 +1134,7 @@ function data_extract (e, num_unseen_markers) {
     return ret_data;
 }
 
-function parseWaveLanes (sig, lane) {
+function parseWaveLanes (sig, lane, maximum) {
     var x,
         sigx,
         content = [],
@@ -1131,7 +1154,7 @@ function parseWaveLanes (sig, lane) {
         // xmin_cfg is min. brick of hbounds, add 1/2 to sigx.phase of all sigs
         tmp0[1] = (sigx.phase || 0) + lane.xmin_cfg/2;
         if ( sigx.wave ) {
-            parsed_wave_lane = parseWaveLane(sigx.wave, lane.period * lane.hscale - 1, lane);
+            parsed_wave_lane = parseWaveLane(sigx.wave, lane.period * lane.hscale - 1, lane, maximum);
             content_wave = parsed_wave_lane[0] ;
             num_unseen_markers = parsed_wave_lane[1];
         } else {
@@ -1954,11 +1977,13 @@ function renderWaveForm (index, source, output) {
         ret = rec(source.signal, {'x':0, 'y':0, 'xmax':0, 'width':[], 'lanes':[], 'groups':[]});
         root = document.getElementById('lanes_' + index);
         groups = document.getElementById('groups_' + index);
-        content  = parseWaveLanes(ret.lanes, lane);
+        content  = parseWaveLanes(ret.lanes, lane, 0);
         glengths = renderWaveLane(root, content, index, lane);
         for (i in glengths) {
             xmax = Math.max(xmax, (glengths[i] + ret.width[i]));
         }
+        content  = parseWaveLanes(ret.lanes, lane, (xmax+1)/3 );
+        glengths = renderWaveLane(root, content, index, lane);
         renderMarks(root, content, index, lane);
         renderArcs(root, ret.lanes, index, source, lane);
         renderGaps(root, ret.lanes, index, lane);
