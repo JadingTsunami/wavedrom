@@ -1978,10 +1978,6 @@ function renderWaveForm (index, source, output) {
         root = document.getElementById('lanes_' + index);
         groups = document.getElementById('groups_' + index);
         content  = parseWaveLanes(ret.lanes, lane, 0);
-        glengths = renderWaveLane(root, content, index, lane);
-        for (i in glengths) {
-            xmax = Math.max(xmax, (glengths[i] + ret.width[i]));
-        }
         for (i = 0; i < content.length; i += 1 ) {
                 if( content[i][1] ) {
                     cmax = Math.max( cmax, content[i][1].length/2 );
@@ -1989,6 +1985,9 @@ function renderWaveForm (index, source, output) {
         }
         content  = parseWaveLanes(ret.lanes, lane, cmax );
         glengths = renderWaveLane(root, content, index, lane);
+        for (i in glengths) {
+            xmax = Math.max(xmax, (glengths[i] + ret.width[i]));
+        }
         renderMarks(root, content, index, lane);
         renderArcs(root, ret.lanes, index, source, lane);
         renderGaps(root, ret.lanes, index, lane);
